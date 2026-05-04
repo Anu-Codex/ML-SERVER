@@ -13,8 +13,10 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(err => console.error("❌ DB Error:", err));
 
 // 2. SCHEMAS & MODELS
+// 1. UPDATE THE PLAYER MODEL
 const Player = mongoose.models.Player || mongoose.model('Player', new mongoose.Schema({
-    name: String,
+    name: { type: String, required: true },
+    username: { type: String }, // ADD THIS to satisfy the old index
     profilePic: { type: String, default: "" },
     wins: { type: Number, default: 0 },
     points: { type: Number, default: 0 },
@@ -23,6 +25,8 @@ const Player = mongoose.models.Player || mongoose.model('Player', new mongoose.S
     goalsAgainst: { type: Number, default: 0 },
     trophies: { type: String, default: "" }
 }), 'players');
+
+
 
 const Announcement = mongoose.models.Announcement || mongoose.model('Announcement', new mongoose.Schema({ message: String, date: { type: Date, default: Date.now } }), 'announcements');
 
@@ -43,13 +47,15 @@ const Subscriber = mongoose.models.Subscriber || mongoose.model('Subscriber', ne
 // 3. API ROUTES
 
 // --- PLAYER SYSTEM (FIXED) ---
+// 2. UPDATE THE ADD-PLAYER ROUTE
 app.post('/api/add-player', async (req, res) => {
     try {
         const { name, profilePic } = req.body;
         if (!name) return res.status(400).json({ success: false, error: "Name is required" });
 
         const newP = new Player({
-            name,
+            name: name,
+            username: name, // This fixes the E11000 error by giving it a unique value
             profilePic: profilePic || "",
             wins: 0, points: 0, previousRank: 0, goalsFor: 0, goalsAgainst: 0, trophies: ""
         });
@@ -57,6 +63,7 @@ app.post('/api/add-player', async (req, res) => {
         await newP.save();
         res.json({ success: true });
     } catch (err) {
+        // If it still fails, tell us why
         res.status(500).json({ success: false, error: err.message });
     }
 });
