@@ -35,6 +35,7 @@ const Tournament = mongoose.models.Tournament || mongoose.model('Tournament', ne
     totalTeams: String,
     status: String,
     winner: String,
+    prize: String,
     joinLink: String,
     date: String,
     tableType: { type: String, default: "Normal" },
