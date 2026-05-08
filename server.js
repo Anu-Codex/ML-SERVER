@@ -44,6 +44,15 @@ const Tournament = mongoose.models.Tournament || mongoose.model('Tournament', ne
 }), 'tournaments');
 
 const Subscriber = mongoose.models.Subscriber || mongoose.model('Subscriber', new mongoose.Schema({ email: { type: String, unique: true, required: true }, date: { type: Date, default: Date.now } }), 'subscribers');
+// 1. ADD THIS MODEL
+const Legacy = mongoose.models.Legacy || mongoose.model('Legacy', new mongoose.Schema({
+    playerName: String,
+    tournamentTitle: String,
+    playerPic: String,
+    date: String,
+    score: String, // e.g. "3-1 in Final"
+    rank: { type: String, default: "CHAMPION" } 
+}), 'legacy');
 
 // 3. API ROUTES
 
@@ -186,6 +195,24 @@ app.post('/api/subscribe', async (req, res) => {
 
 app.get('/api/subscribers', async (req, res) => {
     try { const list = await Subscriber.find().sort({ date: -1 }); res.json(list); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+// 2. ADD THESE ROUTES
+app.get('/api/legacy', async (req, res) => {
+    try {
+        const data = await Legacy.find().sort({ _id: -1 });
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/manage-legacy', async (req, res) => {
+    try {
+        if (req.body.action === 'add') {
+            await new Legacy(req.body.data).save();
+        } else if (req.body.action === 'delete') {
+            await Legacy.findByIdAndDelete(req.body.id);
+        }
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 4. START SERVER
